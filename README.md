@@ -30,6 +30,18 @@ and for how the site population has changed over time. The scripts' outputs are 
 Networks' own "Data Centres by Local Authority" open dataset (operational/pipeline capacity by local
 authority), reproduced here only because it's small; it is UKPN's data, not the author's.
 
+## Submissions
+
+`submissions/` holds the actual documents this analysis fed into:
+
+- `ofgem-curate-response-submitted.docx` — the Ofgem Curate consultation response as sent (2 September
+  2026). The respondent-details telephone number has been redacted; name and email are left as submitted.
+- `neso-letter.md` — follow-up letter to NESO's Future Energy Scenarios team on two findings outside
+  Ofgem's remit (demand-forecast growth assumptions, cooling/climate uncertainty).
+- `ai-energy-council-letter.md` — follow-up letter to the AI Energy Council secretariat on the same
+  cross-regulatory coordination gap. Both letters are reproduced as drafted, with the sign-off left as
+  "[Your Name]" rather than the author's personal signature as actually sent.
+
 ## What's not here
 
 The raw UK Power Networks "Data Centre Demand Profiles" dataset itself (~600MB, ~5.4 million rows) is not
