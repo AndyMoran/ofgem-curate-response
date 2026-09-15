@@ -41,6 +41,8 @@ authority), reproduced here only because it's small; it is UKPN's data, not the 
 - `ai-energy-council-letter.md` — follow-up letter to the AI Energy Council secretariat on the same
   cross-regulatory coordination gap. Both letters are reproduced as drafted, with the sign-off left as
   "[Your Name]" rather than the author's personal signature as actually sent.
+- `appg-data-centres-submission.docx` — written evidence to the House of Commons Data Centres APPG's
+  inaugural inquiry, as sent (15 September 2026), with acknowledged receipt.
 
 ## What's not here
 
