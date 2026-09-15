@@ -1,12 +1,13 @@
 # ofgem-curate-response — supporting analysis
 
-Independent analysis behind several evidence-sourced claims in two public submissions on UK data-centre
-grid connections: a response to Ofgem's "Curate — Demand Connections Reform" consultation (2026), and
-written evidence to the House of Commons Data Centres APPG's inaugural inquiry. Both were submitted
-independently, in a personal capacity, not on behalf of any developer, DNO, vendor, or other stakeholder.
+Independent analysis and writing on UK data-centre grid connections, water use and infrastructure
+constraints. The core of it is evidence behind two public submissions: a response to Ofgem's "Curate —
+Demand Connections Reform" consultation (2026), and written evidence to the House of Commons Data Centres
+APPG's inaugural inquiry. All work here was produced independently, in a personal capacity, not on behalf
+of any developer, DNO, vendor, or other stakeholder.
 
-This repository exists so specific figures in those submissions can be checked against the code and data
-that produced them, rather than taken on trust.
+This repository exists so specific figures in the submissions and articles below can be checked against
+the code, data and sources that produced them, rather than taken on trust.
 
 ## What's here
 
@@ -43,6 +44,16 @@ authority), reproduced here only because it's small; it is UKPN's data, not the 
   "[Your Name]" rather than the author's personal signature as actually sent.
 - `appg-data-centres-submission.docx` — written evidence to the House of Commons Data Centres APPG's
   inaugural inquiry, as sent (15 September 2026), with acknowledged receipt.
+
+## Articles
+
+`articles/` holds standalone written pieces that don't map to a specific submission question but draw on
+the same evidence-first approach:
+
+- `sealed-loops-dont-make-water-disappear.md` — on AI data centre water use: why a sealed chip-level
+  cooling loop doesn't settle a site's water footprint, the WUE gap between dry and evaporative rejection,
+  and the UK drought/water-stress context data centres are being sited into. Every figure is sourced with a
+  full citation list.
 
 ## What's not here
 
