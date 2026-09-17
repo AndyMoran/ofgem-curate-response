@@ -113,6 +113,14 @@ this repo needs that file to run.
 
 ## Licence
 
-Code (the `.py` and `.js` files, where present) is released under the MIT licence — see `LICENSE`. Written
-material (this README) and the third-party data files retain no separate licence claim from the author;
-the NESO tariff tables and UK Power Networks open data remain those organisations' own published data.
+Code (the `.py` and `.js` files, where present) is released under the MIT licence — see `LICENSE`.
+
+The derived data files and chart — `ukpn_site_summary.csv`, `ukpn_monthly_by_voltage.csv`,
+`ukpn_active_sites_by_month.csv`, `ukpn_new_entrant_ramp.csv`, `ukpn_site_span.csv` and
+`ukpn_utilisation_chart.png` — are released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+You're free to use, share and adapt them, including commercially, provided you credit the source, e.g.
+"Andy Moran / Heaviside Analytics, analysis of UK Power Networks' Data Centre Demand Profiles open dataset."
+
+Written material (this README) retains no separate licence claim from the author. Third-party data files
+(`ukpn-data-centres-by-local-authority.csv`, the NESO tariff tables) remain those organisations' own
+published data, under their own terms.
