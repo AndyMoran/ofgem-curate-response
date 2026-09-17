@@ -10,7 +10,7 @@ df = pd.read_csv(path, usecols=usecols, dtype=dtypes, parse_dates=["utc_timestam
 df["month"] = df["utc_timestamp"].dt.to_period("M")
 
 # 1) how many distinct sites are actively reporting each month (pipeline/population growth)
-active_by_month = df.groupby("month", observed=True)["anonymised_data_centre_name"].nunique()
+active_by_month = df.groupby("month", observed=True)["anonymised_data_centre_name"].nunique().rename("active_site_count")
 active_by_month.to_csv("ukpn_active_sites_by_month.csv")
 print("=== Active reporting sites by month (first/last 6) ===")
 print(active_by_month.head(6))

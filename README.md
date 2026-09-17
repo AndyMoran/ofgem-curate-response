@@ -31,6 +31,48 @@ and for how the site population has changed over time. The scripts' outputs are 
 Networks' own "Data Centres by Local Authority" open dataset (operational/pipeline capacity by local
 authority), reproduced here only because it's small; it is UKPN's data, not the author's.
 
+## Data dictionary
+
+All utilisation figures below are `hh_utilisation_ratio` as published in UKPN's own raw dataset (half-hourly
+draw as a proportion of secured/contracted capacity) — not a ratio computed here against a separate capacity
+figure. Each file is small enough to open directly in Excel.
+
+**`ukpn_site_summary.csv`** — one row per site, aggregated across the full dataset period (Jan 2023–May 2026):
+- `anonymised_data_centre_name` — UKPN's own anonymised site identifier
+- `voltage` — connection tier: Extra-High Voltage Import / High Voltage Import / Low Voltage Import
+- `dc_type` — Enterprise / Co-located, as classified by UKPN
+- `mean_util` — mean of `hh_utilisation_ratio` across all half-hourly readings for that site
+- `median_util` — median of the same
+- `p95_util` — 95th percentile (a peak proxy less sensitive to a single outlier reading than `max_util`)
+- `max_util` — the single highest half-hourly reading over the whole period
+- `n_readings` — count of half-hourly readings used
+
+**`ukpn_monthly_by_voltage.csv`** — one row per calendar month:
+- `month` — YYYY-MM
+- `Extra-High Voltage Import` / `High Voltage Import` / `Low Voltage Import` — mean `hh_utilisation_ratio`
+  across all readings that month for sites in that tier
+
+**`ukpn_active_sites_by_month.csv`** — one row per calendar month:
+- `month` — YYYY-MM
+- `active_site_count` — number of distinct sites reporting at least one reading that month
+
+**`ukpn_new_entrant_ramp.csv`** — one row per month-since-connection, for sites whose first reporting month is
+more than 3 months after the dataset's own start (i.e. genuine new entrants, not sites already present when
+the dataset begins — 3 sites qualify; treat this file as indicative only given that sample size):
+- `site_month_idx` — months since the site's first appearance (0 = first month observed)
+- `mean` / `median` — `hh_utilisation_ratio` across all qualifying sites' readings in that relative month
+- `count` — number of half-hourly readings behind that row (months with ≤500 readings are already excluded)
+
+**`ukpn_site_span.csv`** — one row per site:
+- `anonymised_data_centre_name`, `voltage` — as above
+- `first_month` / `last_month` — first and last calendar month the site appears in the dataset
+
+**`ukpn_utilisation_chart.png`** — rendered chart, not tabular; no dictionary entry needed.
+
+**`ukpn-data-centres-by-local-authority.csv`** — UKPN's own published columns, reproduced verbatim:
+`Local Authority District Name`, `County and Unitary Authority Name`, `Operational Data Centre Capacity (MVA)`,
+`Pipeline Data Centre Capacity (MVA)`.
+
 ## Submissions
 
 `submissions/` holds the actual documents this analysis fed into:
