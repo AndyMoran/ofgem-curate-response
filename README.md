@@ -19,17 +19,18 @@ NESO's own published tariff tables (`scripts/Public_2026-27_TNUoS_Tariff_Report_
 "TB"), not estimated. `build_charts.py` produces the two figures in `figures/`.
 
 **UK Power Networks utilisation analysis** (`analyze_ukpn.py`, `analyze_ukpn_trend.py`,
-`analyze_ukpn_bimodality.py`)
+`analyze_ukpn_bimodality.py`, `analyze_ukpn_volatility.py`)
 Analyses UK Power Networks' own published "Data Centre Demand Profiles" open dataset (96 sites,
 half-hourly readings, Jan 2023–May 2026) for actual utilisation against secured/contracted grid capacity,
-how the site population has changed over time, and whether the site-level utilisation distribution shows
-signs of two hidden subpopulations rather than one blended one (see "AI compute vs cloud compute" below).
-The scripts' outputs are the CSV files and chart below.
+how the site population has changed over time, whether the site-level utilisation distribution shows signs
+of two hidden subpopulations rather than one blended one, and whether individual sites show large step-like
+changes in utilisation over time (see "AI compute vs cloud compute" below). The scripts' outputs are the
+CSV files and charts below.
 
 **Derived outputs** (included so results can be inspected without re-running anything):
 `ukpn_site_summary.csv`, `ukpn_monthly_by_voltage.csv`, `ukpn_active_sites_by_month.csv`,
 `ukpn_new_entrant_ramp.csv`, `ukpn_site_span.csv`, `ukpn_utilisation_chart.png`,
-`ukpn_bimodality_check.png`.
+`ukpn_bimodality_check.png`, `ukpn_site_volatility_clean.csv`, `ukpn_site_volatility_top_jumps_clean.png`.
 
 **Third-party open data included for convenience**: `ukpn-data-centres-by-local-authority.csv` — UK Power
 Networks' own "Data Centres by Local Authority" open dataset (operational/pipeline capacity by local
@@ -73,6 +74,21 @@ the dataset begins — 3 sites qualify; treat this file as indicative only given
 
 **`ukpn_utilisation_chart.png`** — rendered chart, not tabular; no dictionary entry needed.
 
+**`ukpn_site_volatility_clean.csv`** — one row per site with ≥12 months of data, excluding the six sites
+flagged elsewhere in this README as having a max half-hourly reading above 100% of secured capacity (see
+"AI compute vs cloud compute" below); built from the raw half-hourly dataset resampled to a monthly mean per
+site, then passed through PELT change-point detection (`ruptures`, RBF cost) to find the single best split
+point in each site's monthly series:
+- `anonymised_data_centre_name`, `voltage`, `dc_type` — as above
+- `n_months` — months of data used for that site
+- `changepoint_detected` — whether PELT found a split point at all
+- `split_month_idx` — the month index (0 = first month) of the detected split
+- `before_mean` / `after_mean` — mean monthly utilisation either side of the split
+- `jump` / `abs_jump` — `after_mean − before_mean`, and its absolute value
+
+**`ukpn_site_volatility_top_jumps_clean.png`** — rendered chart of the 6 largest clean jumps' monthly
+utilisation series with the detected split marked; not tabular, no dictionary entry needed.
+
 **`ukpn-data-centres-by-local-authority.csv`** — UKPN's own published columns, reproduced verbatim:
 `Local Authority District Name`, `County and Unitary Authority Name`, `Operational Data Centre Capacity (MVA)`,
 `Pipeline Data Centre Capacity (MVA)`.
@@ -105,6 +121,62 @@ builds, since a number of them pair their grid demand connection with on-site ba
 turbines, fuel cells) to get around connection-queue delays — but it isn't in the current dataset, and
 whether UKPN could even supply it without breaching the same confidentiality constraint that already
 blocks connection-date disclosure is an open question.
+
+### Temporal volatility: do individual sites change regime over time?
+
+The bimodality check above averages each site over its whole three-year history, which is the wrong lens
+for a specific alternative hypothesis: that a site can spend a long stretch running one kind of workload,
+then shift abruptly to another (e.g. after a tender changes hands or racks are refreshed), in a way that a
+whole-period average smooths away entirely. That's a claim about *individual sites changing over time*, not
+about the *population of site-averages* — so it needs a different, direct test, not an inference from the
+bimodality result.
+
+`analyze_ukpn_volatility.py` runs that test: it resamples each site's raw half-hourly readings to a monthly
+mean and runs PELT change-point detection (`ruptures`) to find the best single split point in each site's
+time series, then measures the mean utilisation before and after that split. The six sites already flagged
+above for a max reading above 100% of secured capacity are excluded first — without that, the two largest
+"changes" in an unfiltered pass were both driven by the same data-quality problem, not a real change in
+site behaviour.
+
+Of the 90 remaining sites with at least 12 months of data, PELT detected a change point in 78, but most are
+small — the median absolute shift is 3.5 percentage points, consistent with ordinary month-to-month noise
+rather than a regime change. 13 sites (14%) show a step of 15 percentage points or more. Co-located sites
+are somewhat overrepresented among the 13 (12 of 13, vs. 1 Enterprise) relative to their overall share of
+the dataset (65 Co-located : 16 Enterprise among the 90), but with only 13 sites in the flagged group this
+is indicative, not a finding to lean on.
+
+Plotting these 13 rather than just reading off the jump size splits them into three visibly different
+patterns, not one, which matters for what any of this can be claimed to show:
+
+- **4 sites go dark and stay there** (#89, #14, #56, #53): utilisation drops to near-zero (≤1%) and never
+  recovers for the rest of the dataset (25+ remaining months in each case). This isn't a step to a
+  *different active level* — it's a flatline at zero. That reads as a site closing, being decommissioned,
+  or a tenant leaving outright, not a switch between workload types. #14 is the odd one even within this
+  group: it ramps up to ~48% over 6 months, then drops to zero and stays there for 30+ months — more
+  consistent with a commissioning/testing phase that never converted to ongoing service than any kind of
+  tenant swap.
+- **2 sites appear from near-zero to a sustained plateau** (#82, #45): the mirror image — a new tenant
+  turning on. #82 is the clean case: flat at ~1% for 10 months, then a sharp jump to ~22% with continued
+  gradual rise to ~34%.
+- **7 sites shift between two active, non-zero levels** (#19, #70, #80, #41, #88, #27, #28): the only group
+  that actually matches the "tender changes hands, site stays in active use" hypothesis this test was
+  designed to check. Even here, one case (#19) undercuts the "step change" framing on closer inspection:
+  PELT's detected split sits at month 20, but the underlying series is a smooth, continuous ramp from 0% to
+  35% over the full 40 months, not a step — a real limitation of fitting a single-breakpoint model to a
+  trend that isn't step-shaped at all.
+
+Put together, this illustrates the limit of what this dataset and this method can settle, more than it
+proves a mechanism. Roughly a third of the "large step-changes" this test finds are really sites entering
+or leaving the dataset (closure, or a new connection going live) rather than an existing, continuously
+operating site switching between workload regimes; the remainder that do fit the step-change shape still
+can't be attributed to AI versus any other kind of contract change, since nothing in the published data
+distinguishes cause from effect here. So: individual sites do show real, non-noise changes in utilisation
+that a whole-period average hides — the original impulse to look for something a static average would miss
+was justified — but the honest conclusion is that UKPN's published data can tell you *that* some sites
+change regime, and roughly how many, without being able to say *why*, or which of those changes (if any)
+reflect an AI-specific transition rather than ordinary churn. Answering that would need something this
+dataset doesn't carry: a workload classification, or a second signal (like the G99 generation-linkage idea
+above) that correlates with AI-specific builds independently of the utilisation numbers themselves.
 
 ## Submissions
 
@@ -148,9 +220,10 @@ this repo needs that file to run.
 
 Code (the `.py` and `.js` files, where present) is released under the MIT licence — see `LICENSE`.
 
-The derived data files and chart — `ukpn_site_summary.csv`, `ukpn_monthly_by_voltage.csv`,
-`ukpn_active_sites_by_month.csv`, `ukpn_new_entrant_ramp.csv`, `ukpn_site_span.csv` and
-`ukpn_utilisation_chart.png` — are released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The derived data files and charts — `ukpn_site_summary.csv`, `ukpn_monthly_by_voltage.csv`,
+`ukpn_active_sites_by_month.csv`, `ukpn_new_entrant_ramp.csv`, `ukpn_site_span.csv`,
+`ukpn_utilisation_chart.png`, `ukpn_site_volatility_clean.csv` and `ukpn_site_volatility_top_jumps_clean.png`
+— are released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 You're free to use, share and adapt them, including commercially, provided you credit the source, e.g.
 "Andy Moran / Heaviside Analytics, analysis of UK Power Networks' Data Centre Demand Profiles open dataset."
 
