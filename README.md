@@ -18,14 +18,18 @@ the "TNUoS Dead Zone" mechanism cited in the submissions. Band thresholds and ra
 NESO's own published tariff tables (`scripts/Public_2026-27_TNUoS_Tariff_Report_Tables_V1.xlsx`, sheet
 "TB"), not estimated. `build_charts.py` produces the two figures in `figures/`.
 
-**UK Power Networks utilisation analysis** (`analyze_ukpn.py`, `analyze_ukpn_trend.py`)
+**UK Power Networks utilisation analysis** (`analyze_ukpn.py`, `analyze_ukpn_trend.py`,
+`analyze_ukpn_bimodality.py`)
 Analyses UK Power Networks' own published "Data Centre Demand Profiles" open dataset (96 sites,
 half-hourly readings, Jan 2023–May 2026) for actual utilisation against secured/contracted grid capacity,
-and for how the site population has changed over time. The scripts' outputs are the CSV files below.
+how the site population has changed over time, and whether the site-level utilisation distribution shows
+signs of two hidden subpopulations rather than one blended one (see "AI compute vs cloud compute" below).
+The scripts' outputs are the CSV files and chart below.
 
 **Derived outputs** (included so results can be inspected without re-running anything):
 `ukpn_site_summary.csv`, `ukpn_monthly_by_voltage.csv`, `ukpn_active_sites_by_month.csv`,
-`ukpn_new_entrant_ramp.csv`, `ukpn_site_span.csv`, `ukpn_utilisation_chart.png`.
+`ukpn_new_entrant_ramp.csv`, `ukpn_site_span.csv`, `ukpn_utilisation_chart.png`,
+`ukpn_bimodality_check.png`.
 
 **Third-party open data included for convenience**: `ukpn-data-centres-by-local-authority.csv` — UK Power
 Networks' own "Data Centres by Local Authority" open dataset (operational/pipeline capacity by local
@@ -72,6 +76,35 @@ the dataset begins — 3 sites qualify; treat this file as indicative only given
 **`ukpn-data-centres-by-local-authority.csv`** — UKPN's own published columns, reproduced verbatim:
 `Local Authority District Name`, `County and Unitary Authority Name`, `Operational Data Centre Capacity (MVA)`,
 `Pipeline Data Centre Capacity (MVA)`.
+
+## AI compute vs cloud compute: an open question
+
+This dataset's only site classification fields are voltage tier (Extra-High/High/Low Voltage Import) and
+connection type (Enterprise/Co-located). There is no field distinguishing general-purpose "cloud compute"
+data centres from AI-compute facilities, and that distinction matters: the two are likely to have very
+different grid demand profiles (steady baseload vs. bursty, rapidly scaling draw), and the headline
+utilisation figures elsewhere in this README are an average across whatever mix of the two actually exists
+in the underlying 96 sites.
+
+`analyze_ukpn_bimodality.py` tests whether the site-level utilisation distribution shows signs of two
+hidden subpopulations — i.e. whether it's genuinely bimodal — using Hartigan's dip test and Gaussian
+mixture models. It isn't: the distribution is a single, strongly right-skewed shape (dip test p = 0.58
+for mean utilisation, p = 0.70 for median; skewness ≈ 2.0–2.3), and even a forced two-way split doesn't
+line up with either voltage tier or connection type (`ukpn_bimodality_check.png`; full output in the
+script itself). In short, this dataset as published cannot resolve the AI-vs-cloud-compute question in
+either direction — it can rule out a clean two-population split, but it can't tell us what's actually
+driving the shape it does show.
+
+The same pass surfaced a separate, genuine data-quality finding worth flagging on its own: six sites show
+a maximum half-hourly reading above 100% of secured capacity, and one (Data Centre #67, High Voltage
+Import, Co-located) averages 124.7% utilisation across all 58,222 readings in its full three-year window —
+either a real, sustained capacity exceedance or a stale/incorrect secured-capacity figure on UKPN's side.
+
+A linked flag for on-site generation (G99) applications is one possible future proxy for AI-specific
+builds, since a number of them pair their grid demand connection with on-site backup generation (gas
+turbines, fuel cells) to get around connection-queue delays — but it isn't in the current dataset, and
+whether UKPN could even supply it without breaching the same confidentiality constraint that already
+blocks connection-date disclosure is an open question.
 
 ## Submissions
 
